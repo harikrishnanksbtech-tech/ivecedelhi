@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HIMADRI – IV Train Seat Booking</title>
+
+<style>
+:root{
+  --primary:#1e40af;
+  --secondary:#2563eb;
+  --bg:#eef2ff;
+  --available:#e0e7ff;
+  --selected:#22c55e;
+  --booked:#9ca3af;
+  --our:#2563eb;
+  --danger:#dc2626;
+}
+
+body{
+  margin:0;
+  font-family:"Segoe UI",Arial,sans-serif;
+  background:var(--bg);
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
+
+/* ===== HEADER ===== */
+.header{
+  background:linear-gradient(120deg,#0f172a,#1e40af,#2563eb);
+  color:white;
+  padding:30px;
+  border-radius:22px;
+  margin-bottom:20px;
+  box-shadow:0 15px 35px rgba(0,0,0,0.25);
+}
+.header h1{margin:0;font-size:40px;letter-spacing:4px}
+.header .sub{font-size:18px;margin-top:6px;opacity:.9}
+.train-box{
+  margin-top:18px;
+  background:rgba(255,255,255,.15);
+  padding:15px;
+  border-radius:14px;
+  font-size:15px;
+}
+
+/* ===== LEGEND ===== */
+.legend{
+  background:white;
+  padding:14px 18px;
+  border-radius:16px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+  align-items:center;
+  margin-bottom:25px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500}
+.legend-box{width:20px;height:20px;border-radius:6px}
+.l-available{background:var(--available)}
+.l-selected{background:var(--selected)}
+.l-booked{background:var(--booked)}
+.l-our{background:var(--our)}
+.l-rac2{background:#a78bfa}
+.l-rac1{background:#fbbf24}
+
+/* ===== NAME SELECT ===== */
+.select-card{
+  background:white;
+  padding:16px 18px;
+  border-radius:18px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  margin-bottom:20px;
+  max-width:360px;
+}
+.select-label{font-size:13px;color:#64748b;margin-bottom:6px}
+.select-wrapper{position:relative}
+.select-wrapper::after{
+  content:"▼";
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:12px;
+  color:#64748b;
+  pointer-events:none;
+}
+.select-wrapper select{
+  width:100%;
+  padding:12px 40px 12px 14px;
+  font-size:16px;
+  border-radius:12px;
+  border:2px solid #c7d2fe;
+  appearance:none;
+  outline:none;
+  background:white;
+}
+.select-wrapper select:disabled{background:#f1f5f9;color:#94a3b8}
+
+/* ===== BUTTON ===== */
+button{
+  padding:14px 34px;
+  font-size:16px;
+  background:var(--primary);
+  color:white;
+  border:none;
+  border-radius:14px;
+  cursor:pointer;
+}
+button:disabled{opacity:.6;cursor:not-allowed}
+
+/* ===== COACH ===== */
+.coach{background:white;margin-top:35px;padding:22px;border-radius:20px}
+.coach-title{font-size:22px;font-weight:600;margin-bottom:20px;color:#1e3a8a}
+
+/* ===== SECTION ===== */
+.section{padding-bottom:18px;margin-bottom:18px;border-bottom:2px dashed #c7d2fe}
+
+/* ===== ROW ===== */
+.row{display:grid;grid-template-columns:repeat(3,1fr) 70px 1fr;gap:10px;margin-bottom:10px}
+.aisle{display:flex;align-items:center;justify-content:center;font-weight:600;color:#94a3b8}
+
+/* ===== SEAT ===== */
+.seat{
+  background:var(--available);
+  border-radius:10px;
+  padding:8px;
+  text-align:center;
+  font-size:12px;
+  cursor:pointer;
+}
+.seat strong{font-size:15px;display:block}
+.seat small{display:block;font-size:11px;margin-top:3px}
+
+.seat.selected{background:var(--selected);color:white}
+.seat.booked{background:var(--booked);color:white;cursor:not-allowed}
+.seat.booked.our{background:var(--our)}
+
+.seat.rac2{background:#a78bfa;color:white}
+.seat.rac1{background:#fbbf24;color:#1f2937}
+.seat.rac-full{background:var(--our);color:white;cursor:not-allowed}
+
+/* ✅ FORCE GREEN WHEN SELECTED */
+.seat.selected.rac2,
+.seat.selected.rac1,
+.seat.selected.rac-full{
+  background:var(--selected) !important;
+  color:white;
+}
+
+.rac-badge{margin-top:4px;font-size:11px;font-weight:700}
+.name-our{color:#fde047;font-weight:600}
+.name-other{color:white}
+
+/* ===== POPUP ===== */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.popup-box{background:white;padding:30px 40px;border-radius:18px;text-align:center;min-width:280px}
+
+/* LOADING */
+.spinner{
+  width:42px;height:42px;
+  border:4px solid #c7d2fe;
+  border-top:4px solid var(--primary);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 12px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SUCCESS / ERROR */
+.tick,.cross{
+  width:60px;height:60px;
+  border-radius:50%;
+  color:white;
+  font-size:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 10px;
+}
+.tick{background:#22c55e}
+.cross{background:var(--danger)}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+  <h1>HIMADRI</h1>
+  <div class="sub">Industrial Visit – ECE</div>
+ <b> <div class="sub">TRAIN SLOT BOOKING</div></b>
+  <div class="train-box">
+    🚆 <b>Mangala Lakshadweep Express</b> (Train No: <b>12617</b>)<br>
+    Route: Shornur → HZM (Delhi)<br>
+    Departure: <b>03:20 PM from SHORNUR RAILWAY STATION</b>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-box l-available"></div> Available</div>
+  <div class="legend-item"><div class="legend-box l-selected"></div> Selected</div>
+  <div class="legend-item"><div class="legend-box l-booked"></div> Booked</div>
+  <div class="legend-item"><div class="legend-box l-our"></div> Our Student</div>
+  <div class="legend-item"><div class="legend-box l-rac2"></div> RAC 2</div>
+  <div class="legend-item"><div class="legend-box l-rac1"></div> RAC 1</div>
+</div>
+
+<div class="select-card">
+  <div class="select-label">Select Student Name</div>
+  <div class="select-wrapper">
+    <select id="nameSelect" disabled>
+      <option>Loading names…</option>
+    </select>
+  </div>
+</div>
+
+<button id="confirmBtn" onclick="confirmSeat()" disabled>CONFIRM SEAT</button>
+
+<div id="coaches"></div>
+</div>
+
+<div class="popup" id="popup">
+  <div class="popup-box" id="popupBox"></div>
+</div>
+
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxvN3e8xelEQOOp7Gsr0Lb2oIk9Bd8Y9o88TsIgW38xHy9ezXOpiN65xcnmsy3aTC_YOQ/exec";
+
+let selectedSeat=null;
+let bookingInProgress=false;
+let nameBookedMap={};
+
+const FULL={
+  LB:"Lower Berth",
+  MB:"Middle Berth",
+  UB:"Upper Berth",
+  SL:"Side Lower",
+  SU:"Side Upper",
+  RAC:"Reservation Against Cancellation"
+};
+
+function showLoading(t){
+  popupBox.innerHTML=`<div class="spinner"></div><b>${t}</b>`;
+  popup.style.display="flex";
+}
+function hidePopup(){popup.style.display="none";}
+
+function showSuccess(n){
+  popupBox.innerHTML=`<div class="tick">✓</div><b>Seat booked successfully</b><br><small>${n}</small>`;
+  popup.style.display="flex";
+  setTimeout(()=>location.reload(),1800);
+}
+function showError(m){
+  popupBox.innerHTML=`<div class="cross">✕</div><b style="color:#dc2626">${m}</b>`;
+  popup.style.display="flex";
+  setTimeout(()=>popup.style.display="none",2200);
+}
+
+function seatDiv(row){
+  const [seat,coach,type,status,availability,by]=row;
+  let d=document.createElement("div");
+  d.className="seat";
+
+  if(type==="RAC"){
+    let a=Number(availability||0);
+    let names=by?by.split("|").map(x=>x.trim()).filter(Boolean):[];
+
+    d.innerHTML=`<strong>${seat}</strong>RAC<small>${FULL.RAC}</small>
+      <div class="rac-badge">Available: ${a}</div>`;
+
+    if(a===2) d.classList.add("rac2");
+    else if(a===1) d.classList.add("rac1");
+    else d.classList.add("rac-full");
+
+    names.forEach(n=>{
+      if(nameBookedMap[n.toLowerCase()]) d.innerHTML+=`<small class="name-our">${n}</small>`;
+      else d.innerHTML+=`<small class="name-other">${n}</small>`;
+    });
+
+    if(a>0) d.onclick=()=>selectSeat(d,seat);
+    return d;
+  }
+
+  d.innerHTML=`<strong>${seat}</strong>${type}<small>${FULL[type]}</small>`;
+
+  if(status==="Booked"){
+    d.classList.add("booked");
+    if(by && nameBookedMap[by.toLowerCase()]){
+      d.classList.add("our");
+      d.innerHTML+=`<small class="name-our">${by}</small>`;
+    }else{
+      d.innerHTML+=`<small class="name-other">${by||"Unknown"}</small>`;
+    }
+  }else{
+    d.onclick=()=>selectSeat(d,seat);
+  }
+  return d;
+}
+
+function selectSeat(d,s){
+  if(bookingInProgress) return;
+  document.querySelectorAll(".seat").forEach(x=>x.classList.remove("selected"));
+  d.classList.add("selected");
+  selectedSeat=s;
+}
+
+function aisle(){
+  let d=document.createElement("div");
+  d.className="aisle";
+  d.innerText="AISLE";
+  return d;
+}
+
+function createCoach(name,seats){
+  let cs=seats.filter(s=>s[1]===name);
+  let c=document.createElement("div");
+  c.className="coach";
+  c.innerHTML=`<div class="coach-title">${name} – Sleeper</div>`;
+
+  for(let i=0;i<cs.length;i+=8){
+    let sec=document.createElement("div");
+    sec.className="section";
+
+    let r1=document.createElement("div");r1.className="row";
+    let r2=document.createElement("div");r2.className="row";
+
+    r1.append(seatDiv(cs[i]),seatDiv(cs[i+1]),seatDiv(cs[i+2]),aisle(),seatDiv(cs[i+6]));
+    r2.append(seatDiv(cs[i+3]),seatDiv(cs[i+4]),seatDiv(cs[i+5]),aisle(),seatDiv(cs[i+7]));
+
+    sec.append(r1,r2);
+    c.appendChild(sec);
+  }
+  coaches.appendChild(c);
+}
+
+showLoading("Loading names & seat layout… Please wait");
+
+fetch(SCRIPT_URL).then(r=>r.json()).then(data=>{
+  data.seats.forEach(r=>{
+    if(r[5]){
+      r[5].split("|").forEach(n=>{
+        if(n && n.toLowerCase()!=="unknown") nameBookedMap[n.toLowerCase()]=true;
+      });
+    }
+  });
+
+  nameSelect.innerHTML=`<option value="">Select your name</option>`;
+  data.names.forEach(n=>{
+    let o=document.createElement("option");
+    o.text=n; nameSelect.add(o);
+  });
+
+  ["S3","S5","S7"].forEach(c=>createCoach(c,data.seats));
+
+  nameSelect.disabled=false;
+  confirmBtn.disabled=false;
+  hidePopup();
+});
+
+function confirmSeat(){
+  if(bookingInProgress||!selectedSeat||!nameSelect.value) return;
+
+  if(nameBookedMap[nameSelect.value.toLowerCase()]){
+    showError("You have already booked a seat");
+    return;
+  }
+
+  bookingInProgress=true;
+  confirmBtn.disabled=true;
+  showLoading("Booking your seat… Please wait");
+
+  let f=new FormData();
+  f.append("seat",selectedSeat);
+  f.append("name",nameSelect.value);
+
+  fetch(SCRIPT_URL,{method:"POST",body:f})
+    .then(r=>r.json())
+    .then(res=>{
+      if(res.success) showSuccess(nameSelect.value);
+      else{
+        showError(res.message||"Booking failed");
+        bookingInProgress=false;
+        confirmBtn.disabled=false;
+      }
+    });
+}
+</script>
+
+</body>
+</html>
