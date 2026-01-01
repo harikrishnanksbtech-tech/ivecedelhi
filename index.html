@@ -364,7 +364,7 @@ fetch(SCRIPT_URL).then(r=>r.json()).then(data=>{
     o.text=n; nameSelect.add(o);
   });
 
-  ["S3","S5","S7"].forEach(c=>createCoach(c,data.seats));
+  ["S3","S4","S5","S7"].forEach(c=>createCoach(c,data.seats));
 
   nameSelect.disabled=false;
   confirmBtn.disabled=false;
@@ -401,4 +401,5 @@ function confirmSeat(){
 </script>
 
 </body>
+
 </html>
